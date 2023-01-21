@@ -1,0 +1,19 @@
+{
+  "name": "threejs_test",
+  "version": "1.0.0",
+  "description": "three.js library test application",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx parcel ./src/index.html"
+  },
+  "author": "roclimber",
+  "license": "ISC",
+  "devDependencies": {
+    "parcel": "^2.8.3"
+  },
+  "dependencies": {
+    "dat.gui": "^0.7.9",
+    "three": "^0.148.0"
+  }
+}
