@@ -63,13 +63,13 @@ camera.position.set(-10, 30, 30);
 controls.update();
 
 
-// scene.fog = new THREE.Fog(0xffffff, 0, 200);
+
 scene.fog = new THREE.FogExp2(0xffffff, 0.01);
 
-// renderer.setClearColor(0xffea00);
+
 
 const textureLoader = new THREE.TextureLoader();
-// scene.background = textureLoader.load(stars);
+
 const cubeTextureLoader = new THREE.CubeTextureLoader();
 scene.background = cubeTextureLoader.load([
     nebula,
@@ -89,14 +89,11 @@ const box2MultiMaterial = [
     new THREE.MeshBasicMaterial({ map: textureLoader.load(stars) })
 ];
 const box2Geometry = new THREE.BoxGeometry(4, 4, 4);
-const box2Material = new THREE.MeshBasicMaterial({
-    // color: 0x00ff00,
-    // map: textureLoader.load(nebula)
-});
+const box2Material = new THREE.MeshBasicMaterial({});
 const box2 = new THREE.Mesh(box2Geometry, box2MultiMaterial);
 scene.add(box2);
 box2.position.set(0, 15, 10);
-// box2.material.map = textureLoader.load(nebula);
+
 box2.name = 'theBox';
 
 
@@ -109,24 +106,6 @@ const plane2 = new THREE.Mesh(plane2Geometry, plane2Material);
 scene.add(plane2);
 plane2.position.set(10, 10, 15);
 
-// plane2.geometry.attributes.position.array[0] -= 10 * Math.random();
-// plane2.geometry.attributes.position.array[1] -= 10 * Math.random();
-// plane2.geometry.attributes.position.array[2] -= 10 * Math.random();
-
-// const lastPointZ = plane2.geometry.attributes.position.array.length - 1;
-// plane2.geometry.attributes.position.array[lastPointZ] -= 10 * Math.random();
-
-// const vShader = `
-//     void main() {
-//         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-//     }
-// `;
-
-// const fShader = `
-//     void main() {
-//         gl_FragColor = vec4(0.5, 0.5, 1.0, 1.0);
-//     }
-// `;
 
 
 const sphere2Geometry = new THREE.SphereGeometry(4);
@@ -157,16 +136,6 @@ assetsLoader.load(
         console.error(error);
     });
 
-// const ambientLight = new THREE.AmbientLight(0x333333);
-// scene.add(ambientLight);
-
-
-// const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-// scene.add(directionalLight);
-// directionalLight.position.set(-30, 50, 0);
-// directionalLight.castShadow = true;
-// directionalLight.shadow.camera.top = 15;
-
 const spotLight = new THREE.SpotLight(0xffffff);
 scene.add(spotLight);
 spotLight.position.set(-100, 100, 0);
@@ -180,11 +149,6 @@ scene.add(gridHelper);
 const axesHelper = new THREE.AxesHelper(5);
 scene.add(axesHelper);
 
-// const dLightHelper = new THREE.DirectionalLightHelper(directionalLight, 5);
-// scene.add(dLightHelper);
-
-// const dLightShedowHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
-// scene.add(dLightShedowHelper);
 
 const sLightHelper = new THREE.SpotLightHelper(spotLight);
 scene.add(sLightHelper);
@@ -197,8 +161,6 @@ const options = {
     sphereColor: '#ffea00',
     wireframe: false,
     speed: 0.01,
-    // light: 1,
-    // sphereRadius: 4,
     angle: 0.096,
     penumbra: 1,
     intensity: 1
@@ -213,12 +175,6 @@ gui.add(options, 'wireframe').onChange(function(event) {
 });
 
 gui.add(options, 'speed', 0, 0.1);
-
-// gui.add(options, 'light', 0, 10).onChange(function(event) {
-//     ambientLight.intensity = event;
-// });
-
-// gui.add(options, 'sphereRadius', 0.1, 15);
 
 gui.add(options, 'angle', 0, 1);
 gui.add(options, 'penumbra', 0, 1);
@@ -246,12 +202,6 @@ function animate() {
     step += options.speed;
     sphere.position.y = 10 * Math.abs(Math.sin(step)) + sphereRadius;
 
-    // console.debug('sphere.geometry.parameters.radius', sphere.geometry.parameters.radius);
-
-    // if (sphere.geometry.parameters.radius != options.sphereRadius) {
-    //     sphere.geometry.parameters.radius = options.sphereRadius;
-    //     sphere.geometry.parameters.radius.needsUpdate = true;
-    // }
 
     spotLight.angle = options.angle;
     spotLight.penumbra = options.penumbra;
@@ -260,7 +210,6 @@ function animate() {
 
     rayCaster.setFromCamera(mousePosition, camera);
     const intersects = rayCaster.intersectObjects(scene.children);
-    // console.debug(intersects);
 
     for (const item of intersects) {
 
@@ -275,13 +224,6 @@ function animate() {
             item.object.rotation.y += 0.01;
         }
     }
-
-
-    // plane2.geometry.attributes.position.array[0] = 10 * Math.random();
-    // plane2.geometry.attributes.position.array[1] = 10 * Math.random();
-    // plane2.geometry.attributes.position.array[2] = 10 * Math.random();
-    // plane2.geometry.attributes.position.array[lastPointZ] = 10 * Math.random();
-    // plane2.geometry.attributes.position.needsUpdate = true;
 
 
 	renderer.render(scene, camera);
