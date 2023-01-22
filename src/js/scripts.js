@@ -1,11 +1,16 @@
 
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 
 import dat from 'dat.gui'
 
 import nebula from '../images/nebula.jpg'
 import stars from '../images/stars.jpg'
+
+
+
+const dinosaurUrl = new URL('../assets/dinosaur.glb', import.meta.url);
 
 
 const scene = new THREE.Scene();
@@ -92,7 +97,65 @@ const box2 = new THREE.Mesh(box2Geometry, box2MultiMaterial);
 scene.add(box2);
 box2.position.set(0, 15, 10);
 // box2.material.map = textureLoader.load(nebula);
+box2.name = 'theBox';
 
+
+const plane2Geometry = new THREE.PlaneGeometry(10, 10, 10, 10);
+const plane2Material = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    wireframe: true
+});
+const plane2 = new THREE.Mesh(plane2Geometry, plane2Material);
+scene.add(plane2);
+plane2.position.set(10, 10, 15);
+
+// plane2.geometry.attributes.position.array[0] -= 10 * Math.random();
+// plane2.geometry.attributes.position.array[1] -= 10 * Math.random();
+// plane2.geometry.attributes.position.array[2] -= 10 * Math.random();
+
+// const lastPointZ = plane2.geometry.attributes.position.array.length - 1;
+// plane2.geometry.attributes.position.array[lastPointZ] -= 10 * Math.random();
+
+// const vShader = `
+//     void main() {
+//         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+//     }
+// `;
+
+// const fShader = `
+//     void main() {
+//         gl_FragColor = vec4(0.5, 0.5, 1.0, 1.0);
+//     }
+// `;
+
+
+const sphere2Geometry = new THREE.SphereGeometry(4);
+const sphere2Material = new THREE.ShaderMaterial({
+    vertexShader: document.getElementById('vertexShader').textContent,
+    fragmentShader: document.getElementById('fragmentShader').textContent
+});
+const sphere2 = new THREE.Mesh(sphere2Geometry, sphere2Material);
+scene.add(sphere2);
+sphere2.position.set(-5, 10, 10);
+
+
+
+const assetsLoader = new GLTFLoader();
+
+assetsLoader.load(
+    dinosaurUrl.href,
+    function(gltf) {
+        const model = gltf.scene;
+        scene.add(model);
+
+        model.position.set(-12, 0, 10);
+    },
+    function(event) {
+        console.debug('progressEvent', event);
+    },
+    function(error) {
+        console.error(error);
+    });
 
 // const ambientLight = new THREE.AmbientLight(0x333333);
 // scene.add(ambientLight);
@@ -134,8 +197,8 @@ const options = {
     sphereColor: '#ffea00',
     wireframe: false,
     speed: 0.01,
-    light: 1,
-    sphereRadius: 4,
+    // light: 1,
+    // sphereRadius: 4,
     angle: 0.096,
     penumbra: 1,
     intensity: 1
@@ -151,11 +214,11 @@ gui.add(options, 'wireframe').onChange(function(event) {
 
 gui.add(options, 'speed', 0, 0.1);
 
-gui.add(options, 'light', 0, 10).onChange(function(event) {
-    ambientLight.intensity = event;
-});
+// gui.add(options, 'light', 0, 10).onChange(function(event) {
+//     ambientLight.intensity = event;
+// });
 
-gui.add(options, 'sphereRadius', 0.1, 15);
+// gui.add(options, 'sphereRadius', 0.1, 15);
 
 gui.add(options, 'angle', 0, 1);
 gui.add(options, 'penumbra', 0, 1);
@@ -181,8 +244,14 @@ function animate() {
     cube.rotation.y += 0.01;
 
     step += options.speed;
-    sphere.geometry.parameters.radius = options.sphereRadius;
-    sphere.position.y = 10 * Math.abs(Math.sin(step)) + options.sphereRadius;
+    sphere.position.y = 10 * Math.abs(Math.sin(step)) + sphereRadius;
+
+    // console.debug('sphere.geometry.parameters.radius', sphere.geometry.parameters.radius);
+
+    // if (sphere.geometry.parameters.radius != options.sphereRadius) {
+    //     sphere.geometry.parameters.radius = options.sphereRadius;
+    //     sphere.geometry.parameters.radius.needsUpdate = true;
+    // }
 
     spotLight.angle = options.angle;
     spotLight.penumbra = options.penumbra;
@@ -199,9 +268,34 @@ function animate() {
 
             item.object.material.color.set(0xff0000);
         }
+
+        if (item.object.name == 'theBox') {
+
+            item.object.rotation.x += 0.01;
+            item.object.rotation.y += 0.01;
+        }
     }
+
+
+    // plane2.geometry.attributes.position.array[0] = 10 * Math.random();
+    // plane2.geometry.attributes.position.array[1] = 10 * Math.random();
+    // plane2.geometry.attributes.position.array[2] = 10 * Math.random();
+    // plane2.geometry.attributes.position.array[lastPointZ] = 10 * Math.random();
+    // plane2.geometry.attributes.position.needsUpdate = true;
+
 
 	renderer.render(scene, camera);
 }
 
 animate();
+
+
+window.addEventListener('resize', function() {
+
+    const { innerWidth, innerHeight } = window;
+
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(innerWidth, innerHeight);
+});
