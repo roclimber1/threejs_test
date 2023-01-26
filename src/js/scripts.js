@@ -1,7 +1,10 @@
 
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
+
 
 import dat from 'dat.gui'
 
@@ -11,6 +14,14 @@ import stars from '../images/stars.jpg'
 
 
 const dinosaurUrl = new URL('../assets/dinosaur.glb', import.meta.url);
+
+// mixamo.com
+const characterUrl = new URL('../assets/Ch20_nonPBR.fbx', import.meta.url);
+const danceUrl = new URL('../assets/Bboy Hip Hop Move.fbx', import.meta.url);
+
+const walkingUrl = new URL('../assets/Walking.fbx', import.meta.url);
+const jogBackwardsUrl = new URL('../assets/Slow Jog Backwards.fbx', import.meta.url)
+
 
 
 const scene = new THREE.Scene();
@@ -23,11 +34,18 @@ document.body.appendChild(renderer.domElement);
 renderer.shadowMap.enabled = true;
 
 
+
+const clock = new THREE.Clock();
+
+let mixer
+
+
 const geometry = new THREE.BoxGeometry(1, 1, 1);
 const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
 const cube = new THREE.Mesh(geometry, material);
 scene.add(cube);
 cube.position.y = 3;
+cube.position.x = 8;
 cube.castShadow = true;
 
 
@@ -51,7 +69,7 @@ const sphereMaterial = new THREE.MeshStandardMaterial({
 const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
 scene.add(sphere);
 sphere.position.x = 6;
-sphere.position.set(-10, 10, 0);
+sphere.position.set(10, 10, 0);
 sphere.castShadow = true;
 const sphereId = sphere.id;
 
@@ -121,6 +139,7 @@ sphere2.position.set(-5, 10, 10);
 
 const assetsLoader = new GLTFLoader();
 
+// let mixer;
 assetsLoader.load(
     dinosaurUrl.href,
     function(gltf) {
@@ -128,6 +147,9 @@ assetsLoader.load(
         scene.add(model);
 
         model.position.set(-12, 0, 10);
+
+        // mixer = new THREE.AnimationMixer(model);
+        // const clips = gltf.animations;
     },
     function(event) {
         console.debug('progressEvent', event);
@@ -135,6 +157,65 @@ assetsLoader.load(
     function(error) {
         console.error(error);
     });
+
+
+const loader = new FBXLoader();
+let character = null;
+
+let walking = null;
+let dancing = null;
+let jogBackwards = null;
+
+const ACTION = {
+    WALKING: 'WALKING',
+    DANCING: 'DANCING',
+    JOG_BACKWARDS: 'JOG_BACKWARDS'
+};
+
+let currentAction = ACTION.DANCING;
+
+
+loader.load(characterUrl.href, (object) => {
+
+    object.scale.setScalar(0.05);
+
+    object.traverse(child => {
+
+        if (child.isMesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+        }
+    });
+
+    const animation = new FBXLoader();
+
+
+    animation.load(walkingUrl.href, (anim) => {
+
+        walking = anim.animations[0];
+    });
+
+    animation.load(jogBackwardsUrl.href, (anim) => {
+
+        jogBackwards = anim.animations[0];
+    });
+
+    animation.load(danceUrl.href, (anim) => {
+
+        dancing = anim.animations[0];
+
+        mixer = new THREE.AnimationMixer(object);
+
+        const action = mixer.clipAction(dancing);
+        action.play();
+    });
+
+    scene.add(object);
+
+    character = object;
+});
+
+
 
 const spotLight = new THREE.SpotLight(0xffffff);
 scene.add(spotLight);
@@ -190,6 +271,123 @@ window.addEventListener('mousemove', function(event) {
     mousePosition.y = - (event.clientY / this.window.innerHeight) * 2 + 1;
 });
 
+
+let characterSpeed = 0;
+let characterAngle = 0;
+let moveForward = false;
+let moveBackward = false;
+
+
+window.addEventListener('keydown', function(event) {
+
+    if (event.code == "Space") {
+
+        character.position.z = 0;
+        character.position.x = 0;
+
+    } else {
+
+        switch (event.key) {
+            case 'w':
+                characterSpeed = 0.08;
+                moveForward = true;
+                break;
+            case 'a':
+                characterAngle = 0.04;
+                break;
+            case 'd':
+                characterAngle = -0.04;
+                break;
+            case 's':
+                characterSpeed = -0.08;
+                moveBackward = true;
+                break;
+        }
+    }
+
+
+    if (moveForward) {
+
+        if (currentAction != ACTION.WALKING) {
+
+            mixer = new THREE.AnimationMixer(character);
+
+            const action = mixer.clipAction(walking);
+            action.play();
+
+            currentAction = ACTION.WALKING;
+        }
+    } else if (moveBackward) {
+
+        if (currentAction != ACTION.JOG_BACKWARDS) {
+
+            mixer = new THREE.AnimationMixer(character);
+
+            const action = mixer.clipAction(jogBackwards);
+            action.play();
+
+            currentAction = ACTION.JOG_BACKWARDS;
+        }
+    } else if (characterAngle) {
+
+        characterSpeed = 0.08;
+
+        if (currentAction != ACTION.WALKING) {
+
+            mixer = new THREE.AnimationMixer(character);
+
+            const action = mixer.clipAction(walking);
+            action.play();
+
+            currentAction = ACTION.WALKING;
+        }
+    }
+
+});
+
+
+window.addEventListener('keyup', function(event) {
+
+
+    if ((event.key == 'a') || (event.key == 'd')) {
+
+        characterAngle = 0;
+
+        if (!moveForward) {
+
+            characterSpeed = 0;
+        }
+    } else {
+
+        if (event.key == 'w') {
+
+            moveForward = false;
+        }
+
+        if (event.key == 's') {
+
+            moveBackward = false;
+        }
+
+        characterSpeed = 0;
+    }
+
+
+    if (!moveForward && !characterAngle && !moveBackward) {
+
+        if (currentAction != ACTION.DANCING) {
+
+            mixer = new THREE.AnimationMixer(character);
+
+            const action = mixer.clipAction(dancing);
+            action.play();
+
+            currentAction = ACTION.DANCING;
+        }
+    }
+});
+
+
 const rayCaster = new THREE.Raycaster();
 
 
@@ -223,6 +421,22 @@ function animate() {
             item.object.rotation.x += 0.01;
             item.object.rotation.y += 0.01;
         }
+    }
+
+    if (character) {
+
+        character.rotation.y += characterSpeed ? characterAngle : 0.01;
+
+        const angle = character.rotation.y;
+
+        character.position.z += Math.cos(angle) * characterSpeed;
+        character.position.x += Math.sin(angle) * characterSpeed;
+    }
+
+    const delta = clock.getDelta();
+
+    if (mixer) {
+        mixer.update(delta);
     }
 
 
