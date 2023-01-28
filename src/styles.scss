@@ -1,0 +1,39 @@
+
+$base-color: #9d9b9b;
+
+
+.title {
+    display: flex;
+    flex-direction: row-reverse;
+    height: 30vh;
+    position: sticky;
+    top: 0;
+    z-index: -1;
+    width: 100%;
+}
+
+.game_scene {
+    width: 300px;
+}
+
+.text {
+    font-size: 5em;
+    font-family: sans-serif;
+    color: $base-color;
+    z-index: 1;
+    padding-left: 0.3em;
+    padding-right: 0.3em;
+}
+
+.progress {
+    position: absolute;
+    top: 1.3em;
+    right: 3.3em;
+    font-size: 1.5em;
+    font-weight: bold;
+    color: $base-color;
+}
+
+.hidden {
+    display: none;
+}
