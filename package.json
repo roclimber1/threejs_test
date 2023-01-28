@@ -2,10 +2,11 @@
   "name": "threejs_test",
   "version": "1.0.0",
   "description": "three.js library test application",
-  "main": "index.js",
+  "source": "./src/index.html",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npx parcel ./src/index.html"
+    "start": "npx parcel",
+    "build": "npx parcel build"
   },
   "author": "roclimber",
   "license": "ISC",
