@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "npx parcel",
-    "build": "npx parcel build"
+    "build": "npx parcel build --no-source-maps"
   },
   "author": "roclimber",
   "license": "ISC",

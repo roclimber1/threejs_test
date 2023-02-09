@@ -46,7 +46,9 @@ const mainBlock = document.getElementById('title');
 
 
 const { offsetHeight: height, offsetWidth: width } = gameSceneDiv;
-const camera = new THREE.PerspectiveCamera( 75, width / height, 0.1, 1000 );
+let aspectRatio = width / height;
+
+const camera = new THREE.PerspectiveCamera(75, aspectRatio, 0.1, 1000 );
 
 
 renderer.setSize(width, height);
@@ -60,15 +62,19 @@ let mixer
 
 
 
-const planeGeometry = new THREE.PlaneGeometry(30, 30);
-const planeMaterial = new THREE.MeshStandardMaterial({
-    color: 0xffffff,
-    side: THREE.DoubleSide
-});
-const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-scene.add(plane);
-plane.rotation.x = -0.5 * Math.PI;
-plane.receiveShadow = true;
+
+const cubeSide = 12;
+
+const geometry = new THREE.BoxGeometry(cubeSide, cubeSide, cubeSide);
+const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
+const cube = new THREE.Mesh(geometry, material);
+
+scene.add(cube);
+
+cube.rotation.x = - 0.5 * Math.PI;
+cube.position.y = - cubeSide / 2;
+cube.castShadow = true;
+cube.receiveShadow = true;
 
 
 
@@ -294,6 +300,11 @@ function animate() {
 
         character.position.z += Math.cos(angle) * characterSpeed;
         character.position.x += Math.sin(angle) * characterSpeed;
+
+        if (cube) {
+            cube.position.z = character.position.z;
+            cube.position.x = character.position.x;
+        }
     }
 
     const delta = clock.getDelta();
@@ -301,7 +312,6 @@ function animate() {
     if (mixer) {
         mixer.update(delta);
     }
-
 
 
 	renderer.render(scene, camera);
@@ -314,7 +324,9 @@ window.addEventListener('resize', function() {
 
     const { offsetHeight: height, offsetWidth: width } = gameSceneDiv;
 
-    camera.aspect = width / height;
+    aspectRatio = width / height;
+
+    camera.aspect = aspectRatio;
     camera.updateProjectionMatrix();
 
     renderer.setSize(width, height);
@@ -323,7 +335,9 @@ window.addEventListener('resize', function() {
 
 const cameraInitPositionZ = camera.position.z;
 const cameraInitPositionX = camera.position.x;
-const blockInitSize = mainBlock.offsetWidth;
+
+const blockInitWidth = mainBlock.offsetWidth;
+
 
 window.addEventListener('scroll', function (event) {
 
@@ -332,7 +346,10 @@ window.addEventListener('scroll', function (event) {
     camera.position.z = cameraInitPositionZ + position / 80;
     camera.position.x = cameraInitPositionX - position / 80;
 
-    mainBlock.style = `width: ${Math.round(blockInitSize - position / 4)}px; top: ${Math.round(position / 30)}px;`;
+    const width = blockInitWidth - position / 4;
+
+    mainBlock.style = `width: ${Math.round(width)}px; top: ${Math.round(position / 30)}px;`;
+
 
     controls.update();
 });
