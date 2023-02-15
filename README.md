@@ -14,3 +14,6 @@ npm run start
 ```sh
 npm run build
 ```
+
+
+[See the result here](https://roclimber1.github.io/pages/threejs_test/index.html)
