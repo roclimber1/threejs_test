@@ -5,7 +5,7 @@ $base-color: #9d9b9b;
 .title {
     display: flex;
     flex-direction: row-reverse;
-    height: 30vh;
+    height: 100vh;
     position: sticky;
     top: 0;
     z-index: -1;
@@ -13,7 +13,8 @@ $base-color: #9d9b9b;
 }
 
 .game_scene {
-    width: 300px;
+    width: 100%;
+    height: 100%;
 }
 
 .text {
