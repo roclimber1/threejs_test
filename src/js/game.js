@@ -7,15 +7,8 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
 
 
 
-// sketchfab
-// mixamo.com
-const characterUrl = new URL('../assets/Ch20_nonPBR.fbx', import.meta.url);
-const danceUrl = new URL('../assets/Bboy Hip Hop Move.fbx', import.meta.url);
 
-const walkingUrl = new URL('../assets/Walking.fbx', import.meta.url);
-const jogBackwardsUrl = new URL('../assets/Slow Jog Backwards.fbx', import.meta.url)
-
-
+const characterUrl = new URL('../assets/robot.fbx', import.meta.url);
 
 
 const scene = new THREE.Scene();
@@ -94,11 +87,14 @@ scene.fog = new THREE.FogExp2(0xffffff, 0.01);
 
 
 const loader = new FBXLoader();
+
 let character = null;
+
 
 let walking = null;
 let dancing = null;
 let jogBackwards = null;
+
 
 const ACTION = {
     WALKING: 'WALKING',
@@ -106,12 +102,14 @@ const ACTION = {
     JOG_BACKWARDS: 'JOG_BACKWARDS'
 };
 
+
 let currentAction = ACTION.DANCING;
+
 
 
 loader.load(characterUrl.href, (object) => {
 
-    object.scale.setScalar(0.05);
+    object.scale.setScalar(0.01);
 
     object.traverse(child => {
 
@@ -121,28 +119,26 @@ loader.load(characterUrl.href, (object) => {
         }
     });
 
-    const animation = new FBXLoader();
+
+    const animations = object.animations;
+
+    try {
+
+        walking = THREE.AnimationClip.findByName(animations, 'Armature.001|Walk');
+        jogBackwards = THREE.AnimationClip.findByName(animations, 'Armature.001|Jog Backwards');
+        dancing = THREE.AnimationClip.findByName(animations, 'Armature.001|Idle');
+
+    } catch (error) {
+
+        console.error('🚀 ~ file: game.js:132 ~ loader.load ~ error:', error);
+    }
 
 
-    animation.load(walkingUrl.href, (anim) => {
+    mixer = new THREE.AnimationMixer(object);
 
-        walking = anim.animations[0];
-    });
+    const action = mixer.clipAction(dancing);
+    action.play();
 
-    animation.load(jogBackwardsUrl.href, (anim) => {
-
-        jogBackwards = anim.animations[0];
-    });
-
-    animation.load(danceUrl.href, (anim) => {
-
-        dancing = anim.animations[0];
-
-        mixer = new THREE.AnimationMixer(object);
-
-        const action = mixer.clipAction(dancing);
-        action.play();
-    });
 
     scene.add(object);
 
@@ -176,6 +172,10 @@ let moveForward = false;
 let moveBackward = false;
 
 
+const CHARACTER_SPEED = 0.2;
+const CHARACTER_ANGLE = 0.04;
+
+
 window.addEventListener('keydown', function(event) {
 
     if (event.code == "Space") {
@@ -187,17 +187,17 @@ window.addEventListener('keydown', function(event) {
 
         switch (event.key) {
             case 'w':
-                characterSpeed = 0.08;
+                characterSpeed = CHARACTER_SPEED;
                 moveForward = true;
                 break;
             case 'a':
-                characterAngle = 0.04;
+                characterAngle = CHARACTER_ANGLE;
                 break;
             case 'd':
-                characterAngle = -0.04;
+                characterAngle = -CHARACTER_ANGLE;
                 break;
             case 's':
-                characterSpeed = -0.08;
+                characterSpeed = -CHARACTER_SPEED;
                 moveBackward = true;
                 break;
         }
@@ -228,7 +228,7 @@ window.addEventListener('keydown', function(event) {
         }
     } else if (characterAngle) {
 
-        characterSpeed = 0.08;
+        characterSpeed = CHARACTER_SPEED;
 
         if (currentAction != ACTION.WALKING) {
 
@@ -297,9 +297,11 @@ function animate() {
         character.rotation.y += characterSpeed ? characterAngle : 0.01;
 
         const angle = character.rotation.y;
+        const dZ = Math.cos(angle) * characterSpeed;
+        const dX = Math.sin(angle) * characterSpeed;
 
-        character.position.z += Math.cos(angle) * characterSpeed;
-        character.position.x += Math.sin(angle) * characterSpeed;
+        character.position.z += dZ;
+        character.position.x += dX;
 
         if (cube) {
             cube.position.z = character.position.z;
