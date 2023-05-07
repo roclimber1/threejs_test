@@ -5,14 +5,16 @@
   "source": "./src/index.html",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "npx parcel",
-    "build": "npx parcel build --no-source-maps"
+    "clean": "rimraf ./dist",
+    "start": "npm run clean && npx parcel",
+    "build": "npm run clean && npx parcel build --no-source-maps"
   },
   "author": "roclimber",
   "license": "ISC",
   "devDependencies": {
     "@parcel/transformer-sass": "^2.8.3",
-    "parcel": "^2.8.3"
+    "parcel": "^2.8.3",
+    "rimraf": "^5.0.0"
   },
   "dependencies": {
     "dat.gui": "^0.7.9",
