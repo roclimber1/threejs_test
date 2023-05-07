@@ -22,7 +22,7 @@ const renderer = new THREE.WebGLRenderer({
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.setPixelRatio(window.devicePixelRatio);
 
 
@@ -62,12 +62,15 @@ const geometry = new THREE.BoxGeometry(cubeSide, cubeSide, cubeSide);
 const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
 const cube = new THREE.Mesh(geometry, material);
 
+
 scene.add(cube);
 
 cube.rotation.x = - 0.5 * Math.PI;
 cube.position.y = - cubeSide / 2;
 cube.castShadow = true;
 cube.receiveShadow = true;
+
+
 
 
 
@@ -94,6 +97,12 @@ let character = null;
 let walking = null;
 let dancing = null;
 let jogBackwards = null;
+
+let jogTiming = 0;
+let jogDuration = 0;
+
+const JOG_PAUSE = 0.37;
+const JOG_ENDING_PHASE = 0.4;
 
 
 const ACTION = {
@@ -126,6 +135,8 @@ loader.load(characterUrl.href, (object) => {
 
         walking = THREE.AnimationClip.findByName(animations, 'Armature.001|Walk');
         jogBackwards = THREE.AnimationClip.findByName(animations, 'Armature.001|Jog Backwards');
+        jogDuration = jogBackwards.duration;
+
         dancing = THREE.AnimationClip.findByName(animations, 'Armature.001|Idle');
 
     } catch (error) {
@@ -168,12 +179,15 @@ spotLight.intensity = 0.8;
 
 let characterSpeed = 0;
 let characterAngle = 0;
+
 let moveForward = false;
 let moveBackward = false;
+let jogForward = false;
 
 
-const CHARACTER_SPEED = 0.2;
+const CHARACTER_SPEED = 0.3;
 const CHARACTER_ANGLE = 0.04;
+
 
 
 window.addEventListener('keydown', function(event) {
@@ -186,19 +200,31 @@ window.addEventListener('keydown', function(event) {
     } else {
 
         switch (event.key) {
+
             case 'w':
+
                 characterSpeed = CHARACTER_SPEED;
                 moveForward = true;
+
                 break;
+
             case 'a':
+
                 characterAngle = CHARACTER_ANGLE;
+
                 break;
+
             case 'd':
-                characterAngle = -CHARACTER_ANGLE;
+
+                characterAngle = - CHARACTER_ANGLE;
+
                 break;
+
             case 's':
-                characterSpeed = -CHARACTER_SPEED;
+
+                characterSpeed = - CHARACTER_SPEED;
                 moveBackward = true;
+
                 break;
         }
     }
@@ -265,6 +291,7 @@ window.addEventListener('keyup', function(event) {
         if (event.key == 's') {
 
             moveBackward = false;
+            jogTiming = 0;
         }
 
         characterSpeed = 0;
@@ -291,14 +318,35 @@ function animate() {
 
 	requestAnimationFrame(animate);
 
+    const delta = clock.getDelta();
+
 
     if (character) {
 
         character.rotation.y += characterSpeed ? characterAngle : 0.01;
 
         const angle = character.rotation.y;
-        const dZ = Math.cos(angle) * characterSpeed;
-        const dX = Math.sin(angle) * characterSpeed;
+        let dZ = Math.cos(angle) * characterSpeed;
+        let dX = Math.sin(angle) * characterSpeed;
+
+        if (currentAction == ACTION.JOG_BACKWARDS) {
+
+            const condition = (jogTiming < JOG_PAUSE)
+                || (jogTiming >= jogDuration - JOG_ENDING_PHASE);
+
+            if (condition) {
+
+                dZ = 0;
+                dX = 0;
+            }
+
+            jogTiming += delta;
+
+            if (jogTiming >= jogDuration) {
+
+                jogTiming = 0;
+            }
+        }
 
         character.position.z += dZ;
         character.position.x += dX;
@@ -308,8 +356,6 @@ function animate() {
             cube.position.x = character.position.x;
         }
     }
-
-    const delta = clock.getDelta();
 
     if (mixer) {
         mixer.update(delta);
