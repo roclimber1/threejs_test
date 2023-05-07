@@ -97,18 +97,20 @@ let character = null;
 let walking = null;
 let dancing = null;
 let jogBackwards = null;
+let jogForwards = null;
 
 let jogTiming = 0;
 let jogDuration = 0;
 
 const JOG_PAUSE = 0.37;
-const JOG_ENDING_PHASE = 0.4;
+const JOG_ENDING_PHASE = 0.7;
 
 
 const ACTION = {
     WALKING: 'WALKING',
     DANCING: 'DANCING',
-    JOG_BACKWARDS: 'JOG_BACKWARDS'
+    JOG_BACKWARDS: 'JOG_BACKWARDS',
+    JOG_FORWARDS: 'JOG_FORWARDS'
 };
 
 
@@ -135,6 +137,7 @@ loader.load(characterUrl.href, (object) => {
 
         walking = THREE.AnimationClip.findByName(animations, 'Armature.001|Walk');
         jogBackwards = THREE.AnimationClip.findByName(animations, 'Armature.001|Jog Backwards');
+        jogForwards = THREE.AnimationClip.findByName(animations, 'Armature.001|Jog Forwards');
         jogDuration = jogBackwards.duration;
 
         dancing = THREE.AnimationClip.findByName(animations, 'Armature.001|Idle');
@@ -168,7 +171,9 @@ loader.load(characterUrl.href, (object) => {
 
 
 const spotLight = new THREE.SpotLight(0xffffff);
+
 scene.add(spotLight);
+
 spotLight.position.set(-100, 100, 0);
 spotLight.castShadow = true;
 spotLight.angle = 0.07;
@@ -186,6 +191,7 @@ let jogForward = false;
 
 
 const CHARACTER_SPEED = 0.3;
+const CHARACTER_JOG_SPEED = 0.4;
 const CHARACTER_ANGLE = 0.04;
 
 
@@ -208,6 +214,13 @@ window.addEventListener('keydown', function(event) {
 
                 break;
 
+            case 'e':
+
+                characterSpeed = CHARACTER_JOG_SPEED;
+                jogForward = true;
+
+                break;
+
             case 'a':
 
                 characterAngle = CHARACTER_ANGLE;
@@ -222,7 +235,7 @@ window.addEventListener('keydown', function(event) {
 
             case 's':
 
-                characterSpeed = - CHARACTER_SPEED;
+                characterSpeed = - CHARACTER_JOG_SPEED;
                 moveBackward = true;
 
                 break;
@@ -241,6 +254,19 @@ window.addEventListener('keydown', function(event) {
 
             currentAction = ACTION.WALKING;
         }
+
+    } else if (jogForward) {
+
+        if (currentAction != ACTION.JOG_FORWARDS) {
+
+            mixer = new THREE.AnimationMixer(character);
+
+            const action = mixer.clipAction(jogForwards);
+            action.play();
+
+            currentAction = ACTION.JOG_FORWARDS;
+        }
+
     } else if (moveBackward) {
 
         if (currentAction != ACTION.JOG_BACKWARDS) {
@@ -288,6 +314,12 @@ window.addEventListener('keyup', function(event) {
             moveForward = false;
         }
 
+        if (event.key == 'e') {
+
+            jogForward = false;
+            jogTiming = 0;
+        }
+
         if (event.key == 's') {
 
             moveBackward = false;
@@ -326,10 +358,15 @@ function animate() {
         character.rotation.y += characterSpeed ? characterAngle : 0.01;
 
         const angle = character.rotation.y;
+
         let dZ = Math.cos(angle) * characterSpeed;
         let dX = Math.sin(angle) * characterSpeed;
 
-        if (currentAction == ACTION.JOG_BACKWARDS) {
+        const jogCondition = (currentAction == ACTION.JOG_BACKWARDS)
+            || (currentAction == ACTION.JOG_FORWARDS)
+
+
+        if (jogCondition) {
 
             const condition = (jogTiming < JOG_PAUSE)
                 || (jogTiming >= jogDuration - JOG_ENDING_PHASE);
